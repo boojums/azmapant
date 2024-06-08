@@ -11,7 +11,7 @@
 
     <script>
         function createMap() {
-            var map = L.map('mapid').setView([32.4, -110.7], 13);
+            var map = L.map('mapid');
 
             // base map layer (OpenStreetMap)
             var osmBase = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -60,6 +60,15 @@
                 imperial: false
             }).addTo(map);
 
+
+            map.on('moveend', function (e) {
+                document.getElementById("zoom-level").textContent = "Zoom " + map.getZoom();
+                document.getElementById("where").innerHTML = "<a href=https://boojums.github.io/azmapant/?lat=" + map.getCenter().lat + "&amp;lng=" + map.getCenter().lng +
+                    "&amp;zl=" + map.getZoom()
+                    + ">"
+                    + map.getCenter().lat.toFixed(5) + "," + map.getCenter().lng.toFixed(5) + "</a>";
+            });
+
             return map;
         }
 
@@ -72,6 +81,9 @@
         <div class="left">
             <span id="top-logo"><a href="https://www.tucsonorienteeringclub.org"><img src="toc_logo.png"
                         height="25"></a></span>
+            <span id="zoom-level">Zoom</span>
+            <span id="where"></span>
+
         </div>
         <div class="right">
             <span><button id="about-button">About</button></span>
@@ -89,6 +101,18 @@
     <div id="mapid"></div>
     <script>
         var map = createMap();
+
+        var params = {};
+        window.location.href.replace(/#.*/, "").replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+            params[key] = value;
+        });
+
+        var lat = params.lat || 32.4;
+        var lng = params.lng || -110.7;
+        var zl = params.zl || 13;
+
+        map.setView(new L.LatLng(lat, lng), zl);
+
 
         var modal = document.getElementById("modal-about");
         var btn = document.getElementById("about-button");
