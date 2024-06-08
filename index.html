@@ -7,6 +7,8 @@
     <title>Arizona MapAnt</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="L.Control.Opacity.js"></script>
+    <link href="L.Control.Opacity.css" rel="stylesheet" />
     <link type="text/css" rel="stylesheet" href="style.css">
 
     <script>
@@ -54,12 +56,22 @@
                 "OSM Paths": osmLayer,
             };
 
-            L.control.layers(baseMaps, overlayMaps).addTo(map);
+            L.control.layers(baseMaps, overlayMaps,
+                {
+                    collapsed: false,
+                })
+                .addTo(map);
+
+            L.control
+                .opacity(overlayMaps, {
+                    label: 'Layers Opacity',
+                })
+                .addTo(map);
+
             new L.control.scale({
                 position: 'bottomright',
                 imperial: false
             }).addTo(map);
-
 
             map.on('moveend', function (e) {
                 document.getElementById("zoom-level").textContent = "Zoom " + map.getZoom();
@@ -112,7 +124,6 @@
         var zl = params.zl || 13;
 
         map.setView(new L.LatLng(lat, lng), zl);
-
 
         var modal = document.getElementById("modal-about");
         var btn = document.getElementById("about-button");
