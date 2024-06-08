@@ -1,49 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaflet.js Map</title>
-    <!-- Include Leaflet CSS -->
+    <title>Arizona MapAnt</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <!-- Include Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <!-- Define CSS styles for the map container -->
     <style>
-        #map {
-            height: 400px;
+        body {
+            padding: 0;
+            margin: 0px;
+            font-family: arial, helvetica;
+            font-size: 14px;
+            color: #FFF;
+        }
+
+        #header {
+            position: absolute;
+            height: 3em;
+            left: 0;
+            top: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(255, 165, 0, 1) 0%, rgba(255, 165, 0, 1) 100%);
+        }
+
+        #mapid {
+            position: absolute;
+            top: 3em;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        #spinner-id {
+            display: none;
+            /*position: absolute; top: 4em; left: 50px; z-index: 300;*/
+        }
+
+        #logo {
+            position: absolute;
+            left: 1em;
+            bottom: 1em;
+            z-index: 40;
+        }
+
+        #top-logo {
+            position: absolute;
+            left: 1em;
+            bottom: 1em;
+            z-index: 40;
+        }
+
+
+        .leaflet-draw-toolbar .leaflet-draw-draw-rectangle {
+            background: url(download.png) no-repeat center !important;
+            background-color: #fff !important;
+        }
+
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 200;
+            left: 0;
+            top: 0;
             width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            color: 000;
+            margin: 15% auto;
+            /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            /* Could be more or less, depending on screen size */
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .left {
+            float: left;
+            padding-left: 2em;
+            padding-top: 1.1ex;
+        }
+
+        .right {
+            float: right;
+            padding-right: 2em;
+            padding-top: 1.1ex;
+        }
+
+        #zoom-level {
+            margin-left: 100px;
+        }
+
+        #where {
+            margin-left: 20px;
+
         }
     </style>
 </head>
+
 <body>
-    <!-- Create a div element with id "map" to hold the map -->
-    <div id="map"></div>
+    <div id="header">
+        <div class="left">
+            <span id="top-logo"><a href="https://www.tucsonorienteeringclub.org"><img src="toc_logo.png"
+                        height="25"></a></span>
+        </div>
+        <div class="right">
+            <span><button id="about-button">About</button></span>
+            <span>MapAnt Tucson - Alpha</span>
+        </div>
+    </div>
+    <div id="modal-about" class="modal">
+        <div id="about-content" class="modal-content">
+            <span class="close">&times;</span>
+            <h3>About MapAnt Tucson Alpha</h3>
+            <p>I'm just playing around.</p>
+        </div>
+    </div>
 
+
+    <div id="mapid"></div>
     <script>
-        // Initialize the map
-        var map = L.map('map').setView([51.505, -0.09], 13); // Centered at London, with zoom level 13
 
-        // Add a base map layer (OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        var map = L.map('mapid').setView([32.4, -110.7], 13);
+
+
+        // base map layer (OpenStreetMap)
+        var osmBase = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Optionally, you can add markers, polygons, or other layers to the map
-        // Example marker
-        L.marker([51.5, -0.09]).addTo(map)
-            .bindPopup('A marker here!');
+        var OpenTopoMap = new L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            maxZoom: 17,
+            attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+        });
 
-        // Example polygon
-        var polygon = L.polygon([
-            [51.509, -0.08],
-            [51.503, -0.06],
-            [51.51, -0.047]
-        ]).addTo(map);
-        
-        polygon.bindPopup("A polygon here!");
+        var mapantURLTemplate = 'https://storage.googleapis.com/mapant/tiles/{z}/{x}/{y}.png';
+        var mapantURLTemplateLocal = 'file:///C%3A/Users/crist/Documents/Local/LemmonTest/tiles/{z}/{x}/{y}.png';
+        var mapantLayer = new L.tileLayer(mapantURLTemplate, {
+            minZoom: 10,
+            minNativeZoom: 12,
+            maxNativeZoom:17,
+            maxZoom: 18,
+            tms: false,
+            attribution: 'Generated by TilesXYZ'
+        }).addTo(map);
 
-        // You can add more layers or customize the map as needed
+        var osmURLTemplate = 'https://storage.googleapis.com/mapant/osmtiles/{z}/{x}/{y}.png';
+        var osmURLTemplateLocal = 'file:///C%3A/Users/crist/Documents/Local/LemmonTest/osmTiles/{z}/{x}/{y}.png'
+        var osmLayer = new L.tileLayer(osmURLTemplate, {
+            minZoom: 10,
+            maxNativeZoom: 17,
+            maxZoom: 18,
+            tms: false,
+            attribution: 'Generated by TilesXYZ'
+        }).addTo(map);
+
+
+        var baseMaps = {
+            "OSM Base": osmBase,
+            "OpenTopoMap": OpenTopoMap,
+        }
+        var overlayMaps = {
+            "mapant": mapantLayer,
+            "OSM Paths": osmLayer,
+        };
+
+        L.control.layers(baseMaps, overlayMaps).addTo(map);
+        new L.control.scale({
+            position: 'bottomright',
+            imperial: false
+        }).addTo(map);
+
+        var modal = document.getElementById("modal-about");
+        var btn = document.getElementById("about-button");
+        var span = document.getElementsByClassName("close")[0];
+
+
+
+        btn.onclick = function () {
+            modal.style.display = "block";
+        }
+
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
     </script>
 </body>
+
 </html>
