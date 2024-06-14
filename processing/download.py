@@ -18,13 +18,13 @@ def download_urls_from_file(file_path, output_directory):
             print(f"Attempting to download: {url}")
             response = requests.get(url)
             if response.status_code == 200:
-                with tempfile.NamedTemporaryFile(delete=False, dir=output_directory) as tmp_file:
-                    temp_path = tmp_file.name
-                    print(f"Downloading to {temp_path}")
-                    tmp_file.write(response.content)
-                os.rename(temp_path, output_path)
-                # with open(f"{output_directory}/{file_name}", 'wb') as output_file:
-                #     output_file.write(response.content)
+                # with tempfile.NamedTemporaryFile(delete=False, dir=output_directory) as tmp_file:
+                #     temp_path = tmp_file.name
+                #     print(f"Downloading to {temp_path}")
+                #     tmp_file.write(response.content)
+                # os.rename(temp_path, output_path)
+                with open(f"{output_directory}/{file_name}", 'wb') as output_file:
+                    output_file.write(response.content)
                 print(f"Downloaded {file_name}")
             else:
                 print(f"Failed to download {url}. Status code: {response.status_code}")
@@ -32,6 +32,6 @@ def download_urls_from_file(file_path, output_directory):
             print(f"Error downloading {url}: {str(e)}")
 
 if __name__ == "__main__":
-    file_path = "download2.txt" 
-    output_directory = "/Users/cristina/maps/mapant_local_data/in" 
+    file_path = "southeastCochise1.txt"
+    output_directory = "M:/lidar/cochise"
     download_urls_from_file(file_path, output_directory)
